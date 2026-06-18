@@ -2,11 +2,20 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 from typing import Any
 
 from .client import CoinClient
 from .credentials import load_credentials_from_secrets
+
+
+def default_secrets_path() -> Path:
+    """Default Auto_Trader-style secrets path; override with COIN_ZERODHA_SECRETS."""
+    configured = os.getenv("COIN_ZERODHA_SECRETS")
+    if configured:
+        return Path(configured).expanduser()
+    return Path.home() / "Desktop" / "Stocks" / "Auto_Trader" / "my_secrets.py"
 
 
 def _client(args: argparse.Namespace) -> CoinClient:
@@ -22,7 +31,7 @@ def _print_json(data: Any) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="coin-zerodha")
-    parser.add_argument("--secrets", default="/Users/sahilgoel/Desktop/Stocks/Auto_Trader/my_secrets.py")
+    parser.add_argument("--secrets", default=str(default_secrets_path()))
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("profile")
     sub.add_parser("holdings")

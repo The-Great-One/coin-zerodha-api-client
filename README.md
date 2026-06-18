@@ -11,11 +11,12 @@ Coin reuses a Kite web login session. The client:
 3. Visits `https://coin.zerodha.com/login`, which establishes `coin_session`.
 4. Uses the `public_token` cookie as the `X-CSRFToken` header for `/api/...` requests.
 
-Credentials can be loaded from the existing Auto_Trader `my_secrets.py` file.
+Credentials can be loaded from the existing Auto_Trader `my_secrets.py` file. By default the CLI reads `~/Desktop/Stocks/Auto_Trader/my_secrets.py`; override with `--secrets` or `COIN_ZERODHA_SECRETS`.
 
 ```bash
-python -m coin_zerodha.cli profile --secrets /Users/sahilgoel/Desktop/Stocks/Auto_Trader/my_secrets.py
-python -m coin_zerodha.cli holdings --secrets /Users/sahilgoel/Desktop/Stocks/Auto_Trader/my_secrets.py
+python -m coin_zerodha.cli profile
+python -m coin_zerodha.cli holdings --secrets ~/Desktop/Stocks/Auto_Trader/my_secrets.py
+COIN_ZERODHA_SECRETS=~/secure/my_secrets.py python -m coin_zerodha.cli sips
 ```
 
 ## Safety
