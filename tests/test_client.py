@@ -99,3 +99,37 @@ def test_login_failure_does_not_leak_password():
         assert "super-secret-password" not in str(exc)
     else:
         raise AssertionError("expected CoinAuthError")
+
+
+def test_login_retries_invalid_totp_after_wait(monkeypatch):
+    monkeypatch.setattr("coin_zerodha.client.otp.get_totp", lambda key: "123456")
+    sleeps = []
+    monkeypatch.setattr("coin_zerodha.client.time.sleep", lambda seconds: sleeps.append(seconds))
+
+    class RetrySession(FakeSession):
+        def __init__(self):
+            super().__init__()
+            self.twofa_count = 0
+
+        def post(self, url, data=None, headers=None, **kwargs):
+            if url.endswith("/api/login"):
+                self.calls.append(("POST", url, {"data": data, "headers": headers, **kwargs}))
+                return DummyResponse(200, {"status": "success", "data": {"request_id": f"REQ{self.twofa_count}"}})
+            if url.endswith("/api/twofa"):
+                self.twofa_count += 1
+                self.calls.append(("POST", url, {"data": data, "headers": headers, **kwargs}))
+                if self.twofa_count == 1:
+                    return DummyResponse(403, {"status": "error", "message": "Invalid TOTP. 4 attempt(s) remain", "data": {"attempts_remaining": 4}})
+                self.cookies.set("enctoken", "enc", domain="kite.zerodha.com")
+                self.cookies.set("public_token", "public", domain=".zerodha.com")
+                return DummyResponse(200, {"status": "success", "data": {"profile": {}}})
+            raise AssertionError(url)
+
+    session = RetrySession()
+    client = CoinClient(CoinCredentials("U", "P", "T"), session=session)
+
+    client.login()
+
+    assert client.is_logged_in()
+    assert sleeps == [31]
+    assert session.twofa_count == 2

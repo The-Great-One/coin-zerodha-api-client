@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Mapping
 
+import time
+
 import onetimepass as otp
 import requests
 
@@ -47,29 +49,43 @@ class CoinClient:
 
     def login(self) -> None:
         """Login through Kite and establish a Coin web session."""
-        self.session.get(f"{self.kite_base_url}/", timeout=self.timeout)
-        api_headers = {
-            "Referer": f"{self.kite_base_url}/",
-            "Origin": self.kite_base_url,
-            "Content-Type": "application/x-www-form-urlencoded",
-        }
-        login_payload = {"user_id": self.credentials.user_id, "password": self.credentials.password}
-        login_resp = self.session.post(f"{self.kite_base_url}/api/login", data=login_payload, headers=api_headers, timeout=self.timeout)
-        login_json = self._json(login_resp)
-        request_id = (login_json.get("data") or {}).get("request_id")
-        if login_resp.status_code != 200 or not request_id:
-            raise CoinAuthError(self._auth_summary("Kite login failed", login_resp, login_json))
+        last_totp_error: tuple[requests.Response, Mapping[str, Any]] | None = None
+        for attempt in range(2):
+            if attempt:
+                # Zerodha can reject a TOTP reused within the same 30s window.
+                # Wait for the next code rather than immediately burning another attempt.
+                time.sleep(31)
+            self.session.get(f"{self.kite_base_url}/", timeout=self.timeout)
+            api_headers = {
+                "Referer": f"{self.kite_base_url}/",
+                "Origin": self.kite_base_url,
+                "Content-Type": "application/x-www-form-urlencoded",
+            }
+            login_payload = {"user_id": self.credentials.user_id, "password": self.credentials.password}
+            login_resp = self.session.post(f"{self.kite_base_url}/api/login", data=login_payload, headers=api_headers, timeout=self.timeout)
+            login_json = self._json(login_resp)
+            request_id = (login_json.get("data") or {}).get("request_id")
+            if login_resp.status_code != 200 or not request_id:
+                raise CoinAuthError(self._auth_summary("Kite login failed", login_resp, login_json))
 
-        twofa_payload = {
-            "user_id": self.credentials.user_id,
-            "request_id": request_id,
-            "twofa_value": otp.get_totp(self.credentials.totp_key),
-            "twofa_type": "totp",
-        }
-        twofa_resp = self.session.post(f"{self.kite_base_url}/api/twofa", data=twofa_payload, headers=api_headers, timeout=self.timeout)
-        twofa_json = self._json(twofa_resp)
-        if twofa_resp.status_code != 200 or twofa_json.get("status") != "success":
+            twofa_payload = {
+                "user_id": self.credentials.user_id,
+                "request_id": request_id,
+                "twofa_value": otp.get_totp(self.credentials.totp_key),
+                "twofa_type": "totp",
+            }
+            twofa_resp = self.session.post(f"{self.kite_base_url}/api/twofa", data=twofa_payload, headers=api_headers, timeout=self.timeout)
+            twofa_json = self._json(twofa_resp)
+            if twofa_resp.status_code == 200 and twofa_json.get("status") == "success":
+                break
+            if self._is_invalid_totp(twofa_json) and attempt == 0:
+                last_totp_error = (twofa_resp, twofa_json)
+                continue
             raise CoinAuthError(self._auth_summary("Kite TOTP failed", twofa_resp, twofa_json))
+        else:
+            if last_totp_error:
+                raise CoinAuthError(self._auth_summary("Kite TOTP failed", last_totp_error[0], last_totp_error[1]))
+            raise CoinAuthError("Kite TOTP failed")
 
         coin_resp = self.session.get(f"{self.coin_base_url}/login", allow_redirects=True, timeout=self.timeout)
         if coin_resp.status_code >= 400 or not self.session.cookies.get("coin_session"):
@@ -129,6 +145,11 @@ class CoinClient:
         except ValueError:
             return {}
         return data if isinstance(data, dict) else {}
+
+    @staticmethod
+    def _is_invalid_totp(payload: Mapping[str, Any]) -> bool:
+        message = str(payload.get("message") or "").lower()
+        return "invalid totp" in message
 
     @staticmethod
     def _auth_summary(prefix: str, resp: requests.Response, payload: Mapping[str, Any]) -> str:
