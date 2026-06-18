@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "coin-zerodha-api-client"
+version = "0.1.0"
+description = "Unofficial Python client for Coin by Zerodha web APIs"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "requests>=2.31",
+  "onetimepass>=1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "responses>=0.25"]
+
+[project.scripts]
+coin-zerodha = "coin_zerodha.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/coin_zerodha"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
