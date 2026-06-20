@@ -19,7 +19,7 @@ def default_secrets_path() -> Path:
 
 
 def _client(args: argparse.Namespace) -> CoinClient:
-    creds = load_credentials_from_secrets(args.secrets)
+    creds = load_credentials_from_secrets(args.secrets, account=args.account)
     c = CoinClient(creds)
     c.login()
     return c
@@ -32,6 +32,11 @@ def _print_json(data: Any) -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="coin-zerodha")
     parser.add_argument("--secrets", default=str(default_secrets_path()))
+    parser.add_argument(
+        "--account", default=None,
+        help="Named account from ACCOUNTS dict in secrets file. "
+             "Uses COIN_ZERODHA_ACCOUNT env var if set, otherwise first entry.",
+    )
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("profile")
     sub.add_parser("holdings")
