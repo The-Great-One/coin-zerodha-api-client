@@ -19,6 +19,44 @@ python -m coin_zerodha.cli holdings --secrets ~/Desktop/Stocks/Auto_Trader/my_se
 COIN_ZERODHA_SECRETS=~/secure/my_secrets.py python -m coin_zerodha.cli sips
 ```
 
+### Multi-Account Support
+
+To manage multiple Zerodha accounts (e.g., personal and family), define an
+`ACCOUNTS` dict in your secrets file:
+
+```python
+# my_secrets.py
+ACCOUNTS = {
+    "sahil": {
+        "USER_NAME": "U123",
+        "PASS": "your-password",
+        "TOTP_KEY": "your-totp-secret",
+    },
+    "dad": {
+        "USER_NAME": "U456",
+        "PASS": "his-password",
+        "TOTP_KEY": "his-totp-secret",
+    },
+}
+```
+
+Then select the account via CLI:
+
+```bash
+coin-zerodha --account sahil holdings
+coin-zerodha --account dad profile
+```
+
+Or set the `COIN_ZERODHA_ACCOUNT` environment variable:
+
+```bash
+export COIN_ZERODHA_ACCOUNT=dad
+coin-zerodha holdings  # uses "dad" account
+```
+
+The old flat-vars format (`USER_NAME`, `PASS`, `TOTP_KEY` at module level)
+continues to work and is treated as the default account.
+
 ## Safety
 
 Unit tests mock HTTP; they do not hit Zerodha or print secrets. Mutating endpoints exist behind explicit methods only; the initial CLI exposes read-only smoke commands.
