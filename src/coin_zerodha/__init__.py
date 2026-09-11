@@ -2,6 +2,7 @@
 
 from .client import CoinClient, CoinError, CoinAuthError, CoinAPIError
 from .credentials import CoinCredentials, load_credentials_from_secrets
+from .investing import InvestingFundHoldings
 
 __all__ = [
     "CoinClient",
@@ -10,4 +11,5 @@ __all__ = [
     "CoinAPIError",
     "CoinCredentials",
     "load_credentials_from_secrets",
+    "InvestingFundHoldings",
 ]
