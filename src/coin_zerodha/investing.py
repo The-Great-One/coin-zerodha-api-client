@@ -348,7 +348,6 @@ class InvestingFundHoldings:
         body = _fetch(search_url, timeout=timeout, referer=base + "/")
 
         # Extract fund links from search results
-        pattern = rf"{re.escape(base)}/funds/([a-z0-9\-]+)"
         slugs_seen: set[str] = set()
         results: list[tuple[str, str]] = []
 
