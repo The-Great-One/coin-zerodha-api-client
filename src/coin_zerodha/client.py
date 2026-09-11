@@ -135,6 +135,14 @@ class CoinClient:
     def sips(self) -> Any:
         return self.get_endpoint("sips")
 
+    def swp(self) -> Any:
+        """Systematic Withdrawal Plans (SWPs)."""
+        return self.get_endpoint("swp")
+
+    def stp(self) -> Any:
+        """Systematic Transfer Plans (STPs)."""
+        return self.get_endpoint("stp")
+
     def watchlist(self) -> Any:
         return self.get_endpoint("watchlist")
 

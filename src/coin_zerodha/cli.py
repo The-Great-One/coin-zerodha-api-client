@@ -41,6 +41,9 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("profile")
     sub.add_parser("holdings")
     sub.add_parser("sips")
+    sub.add_parser("swp")
+    sub.add_parser("stp")
+    sub.add_parser("flows", help="Active SIP + SWP + STP in one view (what is this account actually running?)")
     orders = sub.add_parser("orders")
     orders.add_argument("--from-date")
     orders.add_argument("--to-date")
@@ -53,9 +56,42 @@ def main(argv: list[str] | None = None) -> int:
         _print_json(client.holdings())
     elif args.command == "sips":
         _print_json(client.sips())
+    elif args.command == "swp":
+        _print_json(client.swp())
+    elif args.command == "stp":
+        _print_json(client.stp())
+    elif args.command == "flows":
+        _print_json(_flows(client))
     elif args.command == "orders":
         _print_json(client.orders(from_date=args.from_date, to_date=args.to_date))
     return 0
+
+
+def _rows(payload: Any, *keys: str) -> list[dict[str, Any]]:
+    """Coin returns either a bare list or {'data': [...]} / {key: [...]}."""
+    if isinstance(payload, list):
+        return [r for r in payload if isinstance(r, dict)]
+    if isinstance(payload, dict):
+        for k in keys:
+            v = payload.get(k)
+            if isinstance(v, list):
+                return [r for r in v if isinstance(r, dict)]
+        for v in payload.values():
+            if isinstance(v, list):
+                return [r for r in v if isinstance(r, dict)]
+    return []
+
+
+def _flows(client: CoinClient) -> dict[str, Any]:
+    """Aggregate active SIP/SWP/STP into one summary."""
+    out: dict[str, Any] = {}
+    for label, fn in (("sips", client.sips), ("swp", client.swp), ("stp", client.stp)):
+        try:
+            out[label] = _rows(fn(), label)
+        except Exception as e:  # fail-soft: a closed/absent product must not kill the view
+            out[label] = []
+            out[f"{label}_error"] = f"{type(e).__name__}: {e}"
+    return out
 
 
 if __name__ == "__main__":
