@@ -29,8 +29,8 @@ def load_credentials_from_secrets(
     2. **Named accounts** (multi-account)::
 
         ACCOUNTS = {
-            "sahil": {"USER_NAME": "U1", "PASS": "pw1", "TOTP_KEY": "t1"},
-            "dad":   {"USER_NAME": "U2", "PASS": "pw2", "TOTP_KEY": "t2"},
+            "alice": {"USER_NAME": "U1", "PASS": "pw1", "TOTP_KEY": "t1"},
+            "bob":   {"USER_NAME": "U2", "PASS": "pw2", "TOTP_KEY": "t2"},
         }
 
     When ``ACCOUNTS`` is present, *account* selects the named entry.

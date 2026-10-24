@@ -27,12 +27,12 @@ To manage multiple Zerodha accounts (e.g., personal and family), define an
 ```python
 # my_secrets.py
 ACCOUNTS = {
-    "sahil": {
+    "alice": {
         "USER_NAME": "U123",
         "PASS": "your-password",
         "TOTP_KEY": "your-totp-secret",
     },
-    "dad": {
+    "bob": {
         "USER_NAME": "U456",
         "PASS": "his-password",
         "TOTP_KEY": "his-totp-secret",
@@ -43,15 +43,15 @@ ACCOUNTS = {
 Then select the account via CLI:
 
 ```bash
-coin-zerodha --account sahil holdings
-coin-zerodha --account dad profile
+coin-zerodha --account alice holdings
+coin-zerodha --account bob profile
 ```
 
 Or set the `COIN_ZERODHA_ACCOUNT` environment variable:
 
 ```bash
 export COIN_ZERODHA_ACCOUNT=dad
-coin-zerodha holdings  # uses "dad" account
+coin-zerodha holdings  # uses "bob" account
 ```
 
 The old flat-vars format (`USER_NAME`, `PASS`, `TOTP_KEY` at module level)

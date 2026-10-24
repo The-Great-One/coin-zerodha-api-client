@@ -29,16 +29,16 @@ def test_load_credentials_from_accounts_dict(tmp_path: Path):
     p = tmp_path / "my_secrets.py"
     p.write_text("""
 ACCOUNTS = {
-    "sahil": {"USER_NAME": "U1", "PASS": "pw1", "TOTP_KEY": "t1"},
-    "dad":   {"USER_NAME": "U2", "PASS": "pw2", "TOTP_KEY": "t2"},
+    "alice": {"USER_NAME": "U1", "PASS": "pw1", "TOTP_KEY": "t1"},
+    "bob":   {"USER_NAME": "U2", "PASS": "pw2", "TOTP_KEY": "t2"},
 }
 """)
-    creds = load_credentials_from_secrets(p, account="sahil")
+    creds = load_credentials_from_secrets(p, account="alice")
     assert creds.user_id == "U1"
     assert creds.password == "pw1"
     assert creds.totp_key == "t1"
 
-    creds2 = load_credentials_from_secrets(p, account="dad")
+    creds2 = load_credentials_from_secrets(p, account="bob")
     assert creds2.user_id == "U2"
 
 
@@ -47,8 +47,8 @@ def test_load_credentials_default_account_from_dict(tmp_path: Path):
     p = tmp_path / "my_secrets.py"
     p.write_text("""
 ACCOUNTS = {
-    "sahil": {"USER_NAME": "U1", "PASS": "pw1", "TOTP_KEY": "t1"},
-    "dad":   {"USER_NAME": "U2", "PASS": "pw2", "TOTP_KEY": "t2"},
+    "alice": {"USER_NAME": "U1", "PASS": "pw1", "TOTP_KEY": "t1"},
+    "bob":   {"USER_NAME": "U2", "PASS": "pw2", "TOTP_KEY": "t2"},
 }
 """)
     creds = load_credentials_from_secrets(p)  # no account specified
@@ -57,12 +57,12 @@ ACCOUNTS = {
 
 def test_load_credentials_env_var_overrides_account(monkeypatch, tmp_path: Path):
     """COIN_ZERODHA_ACCOUNT env var picks the account."""
-    monkeypatch.setenv("COIN_ZERODHA_ACCOUNT", "dad")
+    monkeypatch.setenv("COIN_ZERODHA_ACCOUNT", "bob")
     p = tmp_path / "my_secrets.py"
     p.write_text("""
 ACCOUNTS = {
-    "sahil": {"USER_NAME": "U1", "PASS": "pw1", "TOTP_KEY": "t1"},
-    "dad":   {"USER_NAME": "U2", "PASS": "pw2", "TOTP_KEY": "t2"},
+    "alice": {"USER_NAME": "U1", "PASS": "pw1", "TOTP_KEY": "t1"},
+    "bob":   {"USER_NAME": "U2", "PASS": "pw2", "TOTP_KEY": "t2"},
 }
 """)
     creds = load_credentials_from_secrets(p)
@@ -73,7 +73,7 @@ def test_load_credentials_missing_account_raises(tmp_path: Path):
     """Requesting a non-existent account raises KeyError with helpful message."""
     p = tmp_path / "my_secrets.py"
     p.write_text("""
-ACCOUNTS = {"sahil": {"USER_NAME": "U1", "PASS": "pw1", "TOTP_KEY": "t1"}}
+ACCOUNTS = {"alice": {"USER_NAME": "U1", "PASS": "pw1", "TOTP_KEY": "t1"}}
 """)
     import pytest
     with pytest.raises(KeyError, match="Account 'nobody' not found"):
@@ -82,13 +82,13 @@ ACCOUNTS = {"sahil": {"USER_NAME": "U1", "PASS": "pw1", "TOTP_KEY": "t1"}}
 
 def test_load_credentials_env_var_overrides_explicit_account(monkeypatch, tmp_path: Path):
     """Explicit account= parameter takes precedence over env var."""
-    monkeypatch.setenv("COIN_ZERODHA_ACCOUNT", "dad")
+    monkeypatch.setenv("COIN_ZERODHA_ACCOUNT", "bob")
     p = tmp_path / "my_secrets.py"
     p.write_text("""
 ACCOUNTS = {
-    "sahil": {"USER_NAME": "U1", "PASS": "pw1", "TOTP_KEY": "t1"},
-    "dad":   {"USER_NAME": "U2", "PASS": "pw2", "TOTP_KEY": "t2"},
+    "alice": {"USER_NAME": "U1", "PASS": "pw1", "TOTP_KEY": "t1"},
+    "bob":   {"USER_NAME": "U2", "PASS": "pw2", "TOTP_KEY": "t2"},
 }
 """)
-    creds = load_credentials_from_secrets(p, account="sahil")
+    creds = load_credentials_from_secrets(p, account="alice")
     assert creds.user_id == "U1"  # explicit wins over env

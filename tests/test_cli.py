@@ -8,7 +8,7 @@ def test_default_secrets_path_is_home_relative_and_not_user_absolute(monkeypatch
     path = default_secrets_path()
 
     assert path == Path.home() / "Desktop" / "Stocks" / "Auto_Trader" / "my_secrets.py"
-    assert "/Users/sahilgoel" not in Path("src/coin_zerodha/cli.py").read_text()
+    assert "/Users/" not in Path("src/coin_zerodha/cli.py").read_text()
 
 
 def test_default_secrets_path_can_be_overridden_by_env(monkeypatch):
@@ -25,8 +25,8 @@ def test_cli_account_flag_passed_to_credentials_loader(tmp_path, monkeypatch, ca
     secrets = tmp_path / "my_secrets.py"
     secrets.write_text("""
 ACCOUNTS = {
-    "sahil": {"USER_NAME": "U1", "PASS": "pw1", "TOTP_KEY": "t1"},
-    "dad":   {"USER_NAME": "U2", "PASS": "pw2", "TOTP_KEY": "t2"},
+    "alice": {"USER_NAME": "U1", "PASS": "pw1", "TOTP_KEY": "t1"},
+    "bob":   {"USER_NAME": "U2", "PASS": "pw2", "TOTP_KEY": "t2"},
 }
 """)
 
@@ -39,7 +39,7 @@ ACCOUNTS = {
     monkeypatch.setattr(CoinClient, "login", lambda self: None)
     monkeypatch.setattr(CoinClient, "profile", lambda self: {"name": "test"})
 
-    exit_code = cli.main(["--secrets", str(secrets), "--account", "dad", "profile"])
+    exit_code = cli.main(["--secrets", str(secrets), "--account", "bob", "profile"])
     assert exit_code == 0
     assert len(captured_creds) == 1
     assert captured_creds[0].user_id == "U2"
@@ -53,8 +53,8 @@ def test_cli_no_account_flag_uses_default(tmp_path, monkeypatch, capsys):
     secrets = tmp_path / "my_secrets.py"
     secrets.write_text("""
 ACCOUNTS = {
-    "sahil": {"USER_NAME": "U1", "PASS": "pw1", "TOTP_KEY": "t1"},
-    "dad":   {"USER_NAME": "U2", "PASS": "pw2", "TOTP_KEY": "t2"},
+    "alice": {"USER_NAME": "U1", "PASS": "pw1", "TOTP_KEY": "t1"},
+    "bob":   {"USER_NAME": "U2", "PASS": "pw2", "TOTP_KEY": "t2"},
 }
 """)
 
