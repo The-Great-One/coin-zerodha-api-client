@@ -60,3 +60,77 @@ continues to work and is treated as the default account.
 ## Safety
 
 Unit tests mock HTTP; they do not hit Zerodha or print secrets. Mutating endpoints exist behind explicit methods only; the initial CLI exposes read-only smoke commands.
+
+## Features
+
+- Reuses a Kite web login session to access Coin by Zerodha (no OAuth app needed).
+- Read-only smoke commands: `profile`, `holdings`, `sips`.
+- Multi-account support via an `ACCOUNTS` dict in your secrets file.
+- Per-account credential overrides via `AT_KITE_USER_NAME` / `AT_KITE_PASSWORD` / `AT_KITE_TOTP_KEY`.
+- Secrets are never logged or returned as dicts.
+
+## Installation
+
+```bash
+cd ~/Desktop/Projects/trading/coin-zerodha-api-client
+python3 -m venv .venv && source .venv/bin/activate
+pip install -e .
+```
+
+## Usage
+
+```bash
+# default secrets path: ~/Desktop/Stocks/Auto_Trader/my_secrets.py
+coin-zerodha profile
+coin-zerodha holdings
+coin-zerodha sips
+
+# override secrets path
+coin-zerodha holdings --secrets ~/secure/my_secrets.py
+COIN_ZERODHA_SECRETS=~/secure/my_secrets.py coin-zerodha sips
+
+# select account
+coin-zerodha --account alice holdings
+```
+
+## Secrets file formats
+
+Flat vars (backward compatible):
+
+```python
+USER_NAME = "U123"
+PASS = "pw"
+TOTP_KEY = "totp"
+```
+
+Named accounts (multi-account):
+
+```python
+ACCOUNTS = {
+    "alice": {"USER_NAME": "U123", "PASS": "pw1", "TOTP_KEY": "totp1"},
+    "bob":   {"USER_NAME": "U456", "PASS": "pw2", "TOTP_KEY": "totp2"},
+}
+```
+
+## Testing
+
+```bash
+python -m pytest -q          # 27 tests
+ruff check --select E9,F821 .
+```
+
+## Project structure
+
+```
+src/coin_zerodha/
+  cli.py          # CLI entry point
+  client.py       # HTTP client
+  credentials.py  # secrets loading (flat + multi-account)
+  endpoints.py    # API endpoints
+  investing.py    # investing helpers
+tests/
+```
+
+## License
+
+MIT
