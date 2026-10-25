@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://via.placeholder.com/120x120.png?text=CZ" alt="coin-zerodha-api-client logo" width="120" height="120" />
+<img src="icon.png" alt="coin-zerodha-api-client logo" width="120" height="120" />
 
 # coin-zerodha-api-client
 
